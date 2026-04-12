@@ -9,4 +9,4 @@ module purge
 module load R
 
 JOBID=$SLURM_ARRAY_TASK_ID
-Rscript run_simulations.R $JOBID
+Rscript sim/run_simulations.R $JOBID
