@@ -25,7 +25,7 @@ max_iter <- 10000
 K <- length(mu_true)
 
 lower_sim <- job_table$lower_sim[job]
-upper_sim <- lower_sim + 1 #job_table$upper_sim[job]
+upper_sim <- job_table$upper_sim[job]
 results <- vector(mode = "list", length = 0)
 for(sim in lower_sim:upper_sim){
   print(sim)
