@@ -1,4 +1,4 @@
-wait_times <- faithful$waiting
+wait_times <- faithful$waiting # need to scale data
 K <- 2
 n <- length(wait_times)
 n_iter <- max_iter <- 10000
@@ -13,12 +13,24 @@ phi_init <- matrix(data = 1/K,
 
 # Var Bayes
 var_results <- var_gauss_mix(
-  n = n,
   max_iter = max_iter,
   tol_criteria = 1e-5,
   s2_init = s2_init,
   m_init = mu_init,
   phi_init = phi_init,
-  y = wait_times,
+  data = wait_times,
   sigma_mu2 = sigma_mu2
 )
+
+# Gibbs
+n_chains <- 3
+gibbs_results <- gibbs_gaussian_mix(
+    n_iter = 10000,
+    n_chains = n_chains,
+    n_burn = 2000,
+    mu_init = mu_init,
+    y = wait_times,
+    sigma_mu2 = 100
+  )
+
+

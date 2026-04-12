@@ -27,6 +27,12 @@ y <- as.numeric(lapply(1:n, function(i) {
 
 mu_init <- c(0, 0, 0, 0)
 
+m_init <- runif(4, range(y)[1], range(y)[2]) # cannot have equal values, cannot have wild values
+s2_init <- c(10, 5, 3, 4)
+phi_init <- matrix(data = 1/K, 
+                   nrow = n,
+                   ncol = K)
+
 one_sim <- gibbs_gaussian_mix(
   n = n, 
   n_iter = n_iter, 
@@ -34,6 +40,17 @@ one_sim <- gibbs_gaussian_mix(
   mu_init = mu_init, 
   y = y, 
   sigma_mu2 = sigma_mu2)
+
+one_vi <- var_gauss_mix(
+  n = n,
+  max_iter = max_iter,
+  tol_criteria = 1e-5,
+  s2_init = s2_init,
+  m_init = m_init,
+  phi_init = phi_init,
+  data = y,
+  sigma_mu2 = sigma_mu2
+)
 
 
 
