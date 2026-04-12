@@ -113,7 +113,9 @@ gibbs_gaussian_mix <- function(n, n_iter, n_burn, C_init, mu_init, y, sigma_mu2)
            CIs = list(sorted_mu_CIs))
   
   return(list(
-    results_tib = results_tib)
+    results_tib = results_tib,
+    post_means = post_means,
+    mu_CIs = mu_CIs)
   )
 
 }
