@@ -1,3 +1,8 @@
+library(coda)
+library(dplyr)
+library(ggplot2)
+library(forecast)
+
 wait_times <- faithful$waiting # need to scale data
 K <- 2
 n <- length(wait_times)
@@ -33,4 +38,8 @@ gibbs_results <- gibbs_gaussian_mix(
     sigma_mu2 = 100
   )
 
+saveRDS(var_results,
+        file = "./output/faithful_var_results.rds")
+saveRDS(gibbs_results,
+        file = "./output/faithful_gibbs_results.rds")
 

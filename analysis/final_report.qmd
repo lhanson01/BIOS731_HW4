@@ -1,0 +1,51 @@
+---
+title: BIOS 731 HW4
+author: Liam Hanson
+format: html
+execute: 
+  warning: false
+  message: false
+  echo: false
+---
+
+## Problem 1: Gibbs Sampler
+
+We derive the Gibbs Sampler updates for class labels $c_i$ and the mean of the $k$th Gaussian $\mu_k$. The full conditional for $C_{ik}$ i.e. the probability observation $i$ is predicted to have mean $\mu_k$ is
+
+$$P(C_{ik} = 1 | y_i, \mu_k) = \frac{P(y_i, \mu_k | C_{ik})P(C_{ik}=1)}{P(y_i, \mu_k)} \\
+\propto P(y_i, mu_k | C_{ik})P(\mu_k)P(C_{ik}=1)$$
+
+due to independence of $\mu$ and $C_i$. Then $P(C_{ik}=1)=\frac{1}{K}$, and using the Gaussian likelihood $p(y_i|\mu_k, C_{ik}=1)$ and Gaussian prior $p(\mu_k)$ we obtain that the full conditional for $C_i$ is proportional to
+
+$$\textrm{exp}(-\frac{1}{2}(y_i-\mu_k)^2 - \frac{1}{2\sigma^2}\mu_k^2)$$.
+
+To obtain valid probabilities with which to sample, for every $y_i$ we compute this expression for each $\mu_k$ and normalize the resulting $k$-length vector by its sum. The sampled label is the update for $C_ik$ for this iteration. 
+
+To obtain the full conditional distribution for $\mu_k$, follow similar steps as above to obtain
+
+$$p(\mu_k | y_i, C_{ik} = 1) \propto \textrm{exp}(-\frac{1}{2}(y_i-\mu_k)^2 - \frac{1}{2\sigma^2}\mu_k^2)$$.
+
+Because the likelihood and the prior of $\mu_k$ are Gaussian, they yield a Gaussian posterior which we obtain by completing the square:
+
+$$\textrm{exp}(-\frac{1}{2}(y_i-\mu_k)^2 - \frac{1}{2\sigma^2}\mu_k^2) \\
+=\textrm{exp}(-\frac{1}{2}((1+\frac{1}{\sigma^2})\mu_k^2-2y_i\mu_k+y_i^2)))\\=\textrm{exp}(-\frac{1}{2}(1+\frac{1}{\sigma^2})(\mu_k^2-\frac{2y_i\mu_k}{1+\frac{1}{\sigma^2}}+(\frac{y_i}{1+\frac{1}{\sigma^2}})^2-(\frac{y_i}{1+\frac{1}{\sigma^2}})^2+y_i^2))) \\
+\propto \textrm{exp}(-\frac{1}{2}(1+\frac{1}{\sigma^2})(\mu_k - \frac{y_i}{1+\frac{1}{\sigma^2}})^2)$$
+
+which implies $\mu_k | y_i, C_{ik} \sim \textrm{N}(\frac{y_i}{1+\frac{1}{\sigma^2}}, \frac{\sigma^2}{\sigma^2+1})$.
+
+The update for $mu_k$ is then sampled from this distribution.
+
+## Problem 2: Variational Inference
+
+We now derive the updates for variational parameters $m_k, s^2_k, phi_k$. The ELBO is
+
+$$ELBO(q) = \textrm{E[log} \space p(z)] + \textrm{E[log} \space p(x|z)] - \textrm{E[log} \space q(z)]$$.
+
+By the Mean Field Assumption, we have 
+
+$$q(z) = \prod_{k=1}^K q_k(\mu_k; m_k, s^2_k)\prod_{i=1}^n q(c_i ; \phi_i)$$
+
+First we derive the update for $\bf{\phi}_i$. 
+
+$$q_i(c_i ; \phi_i)^* \propto \textrm{exp}\{\textrm{E}_{-\phi_i}[\textrm{log}\space p(\mu, c_i, c_{-i}, y)]\} \\ 
+$$

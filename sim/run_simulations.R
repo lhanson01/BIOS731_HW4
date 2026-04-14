@@ -17,7 +17,7 @@ job_table$lower_sim <- sim_chunks[job_table$chunk, 1]
 job_table$upper_sim <- sim_chunks[job_table$chunk, 2]
 job_table$chunk <- NULL
 
-job <- as.numeric(commandArgs(trailingOnly = TRUE))[1]
+job <- as.numeric(commandArgs(trailingOnly = TRUE))
 seed <- floor(runif(nsim, 1, 10000))
 results <- as.list(rep(NA, nsim))
 mu_true <- c(0, 5, 10, 20)
