@@ -1,0 +1,136 @@
+---
+title: BIOS 731 HW4
+author: Liam Hanson
+format: html
+execute: 
+  warning: false
+  message: false
+  echo: false
+resources:
+- ../output/
+---
+
+
+## Problem 1: Gibbs Sampler
+
+We derive the Gibbs Sampler updates for class labels $c_i$ and the mean of the $k$th Gaussian $\mu_k$. The full conditional for $C_{ik}$ i.e. the probability observation $i$ is predicted to have mean $\mu_k$ is
+
+$$P(C_{ik} = 1 | y_i, \mu_k) = \frac{P(y_i, \mu_k | C_{ik})P(C_{ik}=1)}{P(y_i, \mu_k)} \\
+\propto P(y_i, mu_k | C_{ik})P(\mu_k)P(C_{ik}=1)$$
+
+due to independence of $\mu$ and $C_i$. Then $P(C_{ik}=1)=\frac{1}{K}$, and using the Gaussian likelihood $p(y_i|\mu_k, C_{ik}=1)$ and Gaussian prior $p(\mu_k)$ we obtain that the full conditional for $C_i$ is proportional to
+
+$$\textrm{exp}(-\frac{1}{2}(y_i-\mu_k)^2 - \frac{1}{2\sigma^2}\mu_k^2)$$.
+
+To obtain valid probabilities with which to sample, for every $y_i$ we compute this expression for each $\mu_k$ and normalize the resulting $k$-length vector by its sum. The sampled label is the update for $C_ik$ for this iteration.
+
+To obtain the full conditional distribution for $\mu_k$, follow similar steps as above to obtain
+
+$$p(\mu_k | y_i, C_{ik} = 1) \propto \textrm{exp}(-\frac{1}{2}(y_i-\mu_k)^2 - \frac{1}{2\sigma^2}\mu_k^2)$$.
+
+Because the likelihood and the prior of $\mu_k$ are Gaussian, they yield a Gaussian posterior which we obtain by completing the square:
+
+$$\textrm{exp}(-\frac{1}{2}(y_i-\mu_k)^2 - \frac{1}{2\sigma^2}\mu_k^2) $$
+$$=\textrm{exp}(-\frac{1}{2}((1+\frac{1}{\sigma^2})\mu_k^2-2y_i\mu_k+y_i^2)))$$  $$=\textrm{exp}(-\frac{1}{2}(1+\frac{1}{\sigma^2})(\mu_k^2-\frac{2y_i\mu_k}{1+\frac{1}{\sigma^2}}+(\frac{y_i}{1+\frac{1}{\sigma^2}})^2-(\frac{y_i}{1+\frac{1}{\sigma^2}})^2+y_i^2)))$$ 
+$$\propto \textrm{exp}(-\frac{1}{2}(1+\frac{1}{\sigma^2})(\mu_k - \frac{y_i}{1+\frac{1}{\sigma^2}})^2)$$
+
+which implies $\mu_k | y_i, C_{ik} \sim \textrm{N}(\frac{y_i}{1+\frac{1}{\sigma^2}}, \frac{\sigma^2}{\sigma^2+1})$.
+
+The update for $mu_k$ is then sampled from this distribution.
+
+## Problem 2: Variational Inference
+
+We now derive the updates for variational parameters $m_k, s^2_k, phi_k$. The ELBO is
+
+$$ELBO(q) = \textrm{E[log} \space p(z)] + \textrm{E[log} \space p(x|z)] - \textrm{E[log} \space q(z)]$$.
+
+By the Mean Field Assumption, we have
+
+$$q(z) = \prod_{k=1}^K q_k(\mu_k; m_k, s^2_k)\prod_{i=1}^n q(c_i ; \phi_i)$$
+
+First we derive the update for $\bf{\phi}_i$.
+
+$$q_i(c_i ; \phi_i)^* \propto \textrm{exp}\{\textrm{E}_{-\phi_i}[\textrm{log}\space p(\mu, c_i, c_{-i}, y)]\} \\ 
+$$
+$$ = \textrm{exp}\{-\frac{1}{2}\sum_{i=1}^n\sum_{k=1}^KC_{ik}\textrm{E}_{-\phi_i}[(x_k-\mu_k)^2]\}$$
+$$\propto \textrm{exp}\{x_im_k-\frac{m_k^2+s_k^2}{2}\}$$
+so the update for $\phi_{ik}$ is 
+$$\phi_{ik}=\textrm{exp}\{x_im_k-\frac{m_k^2+s_k^2}{2}\}$$
+For $mu_k$,
+$$q_k(\mu_k ; m_k, s^2_k)^* \propto \textrm{exp}\{\textrm{E}_{-\mu_k}[\textrm{log}\space p(\mu_k, \mu_{-k}, c, y)]\} \\ 
+$$
+
+$$\propto \textrm{exp}\{(\sum_{i=1}^n{x_i\phi_{ik}})\mu_k- (\frac{1}{2}\sum_{i=1}^n\phi_{ik}+\frac{1}{2\sigma^2})\mu_k^2\}$$
+which is proportional to a Gaussian with sufficient statistics $\sum\mu_k$ and 
+$\sum\mu_k^2$ and natural parameters $\sum_{i=1}^n{x_i}\phi_{ik}$,$(\frac{1}{2}\sum_{i=1}^n\phi_{ik}+\frac{1}{2\sigma^2})$.
+Solving for the mean $m_k$ and variance $s_k^2$ of this Gaussian gives updates
+$$s^2_k = \frac{1}{\sum_{i=1}^n\phi_{ik} + \frac{1}{\sigma^2}}$$ and 
+$$m_k = \frac{\sum_{i=1}^n{x_i}\phi_{ik}}{\sum_{i=1}^n\phi_{ik} + \frac{1}{\sigma^2}}$$.
+
+
+## Problem 3: Fit to Faithful data set
+
+To fit the Old Faithful waiting time data set as a Gaussian 2-mixture, we use the derived CAVI algorithm and Gibbs Sampler with 3 chains of 10000 samples with 2000 burn-in samples. The estimates for $\mu_1$, $\mu_2$, and computation time are given below.
+
+
+Method|$\mu_1$ | $\mu_2$ | Mean computation time (s)
+-----|-----|-----|-----:
+CAVI|54.74|80.28| 0.17
+Gibbs Sampler|54.87 | 80.35 | 4.23
+
+The confusion matrix between the two algorithms estimated labels was
+
+|  | Gibbs  ($c_i=1$)   | Gibbs  ($c_i=2$)    | Total |
+| ----- | -------- | ----------- | ----- |
+| **CAVI**  ($c_i=1$)| 100  | 0      | 100 |
+| **CAVI**   ($c_i=2$)  | 1 | 171 | 172 |
+| Total | 101 | 171 | 272 |
+
+We can see nearly perfect agreement between the methods.
+
+Based on trace plots, lag plots and effective sample size, the Gibbs sampler mixed well and converged quickly.
+
+All effective sample sizes for each $\mu_k$ and each chain were 10000 except for the 2nd chain for $\mu_2$.
+
+```{r}
+#| echo: false
+#| layout-nrow: 2
+#| fig.cap: "10-sample average shown. Autocorrelation was low and sampler generally mixed and converged quickly."
+knitr::include_graphics(c("output/mu_1_trace_plot.png",
+                          "output/mu_2_trace_plot.png")
+)
+```
+Lag plots for $\mu_2$ chain 2 showed relatively high autocorrelation compared to 
+other chains.
+
+
+```{r}
+#| echo: false
+#| layout-nrow: 2
+#| out.width: ["40%"]
+knitr::include_graphics(c("output/mu_1_lag_plot.png",
+                          "output/mu_2_lag_plot.png")
+)
+```
+
+## Problem 4: Simulation Study
+
+```{r}
+#| echo: false
+#| layout-nrow: 2
+#| out.width: ["40%"]
+knitr::include_graphics(c("output/bias_plot.png",
+                          "output/cov_plot.png")
+)
+```
+In general, the gibbs sampler estimates were more biased then the variational inference estimates. Bias was highest for $k=3$ i.e. $\mu_3=10$. Biased increased from $\mu_1$
+to $\mu_3$ but then sharpl decreased for $mu_4=20$. This is likely because observations
+generated from this gaussian were better separated from the rest of the sample
+and quicker to label and thus converge on the true mean. 
+
+Coverage of the true mean in the Gibbs sampler was somewhat unpredictable. Simulations
+with n = 1000 appeared to be closes to nominal coverage as well as the better separated
+$\mu_4$. It may be that for very high sample sizes, the Gibbs sampler posterior means
+converged very tightly to the sample mean of their data and credible intervals 
+were too narrow to include the true mean. 
+

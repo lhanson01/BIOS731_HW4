@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Liam Hanson">
+
+<title>BIOS 731 HW4</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="final_report_files/libs/clipboard/clipboard.min.js"></script>
+<script src="final_report_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="final_report_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="final_report_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="final_report_files/libs/quarto-html/popper.min.js"></script>
+<script src="final_report_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="final_report_files/libs/quarto-html/anchor.min.js"></script>
+<link href="final_report_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="final_report_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="final_report_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="final_report_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="final_report_files/libs/bootstrap/bootstrap-9e3ffae467580fdb927a41352e75a2e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">BIOS 731 HW4</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Liam Hanson </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="problem-1-gibbs-sampler" class="level2">
+<h2 class="anchored" data-anchor-id="problem-1-gibbs-sampler">Problem 1: Gibbs Sampler</h2>
+<p>We derive the Gibbs Sampler updates for class labels <span class="math inline">\(c_i\)</span> and the mean of the <span class="math inline">\(k\)</span>th Gaussian <span class="math inline">\(\mu_k\)</span>. The full conditional for <span class="math inline">\(C_{ik}\)</span> i.e.&nbsp;the probability observation <span class="math inline">\(i\)</span> is predicted to have mean <span class="math inline">\(\mu_k\)</span> is</p>
+<p><span class="math display">\[P(C_{ik} = 1 | y_i, \mu_k) = \frac{P(y_i, \mu_k | C_{ik})P(C_{ik}=1)}{P(y_i, \mu_k)} \\
+\propto P(y_i, mu_k | C_{ik})P(\mu_k)P(C_{ik}=1)\]</span></p>
+<p>due to independence of <span class="math inline">\(\mu\)</span> and <span class="math inline">\(C_i\)</span>. Then <span class="math inline">\(P(C_{ik}=1)=\frac{1}{K}\)</span>, and using the Gaussian likelihood <span class="math inline">\(p(y_i|\mu_k, C_{ik}=1)\)</span> and Gaussian prior <span class="math inline">\(p(\mu_k)\)</span> we obtain that the full conditional for <span class="math inline">\(C_i\)</span> is proportional to</p>
+<p><span class="math display">\[\textrm{exp}(-\frac{1}{2}(y_i-\mu_k)^2 - \frac{1}{2\sigma^2}\mu_k^2)\]</span>.</p>
+<p>To obtain valid probabilities with which to sample, for every <span class="math inline">\(y_i\)</span> we compute this expression for each <span class="math inline">\(\mu_k\)</span> and normalize the resulting <span class="math inline">\(k\)</span>-length vector by its sum. The sampled label is the update for <span class="math inline">\(C_ik\)</span> for this iteration.</p>
+<p>To obtain the full conditional distribution for <span class="math inline">\(\mu_k\)</span>, follow similar steps as above to obtain</p>
+<p><span class="math display">\[p(\mu_k | y_i, C_{ik} = 1) \propto \textrm{exp}(-\frac{1}{2}(y_i-\mu_k)^2 - \frac{1}{2\sigma^2}\mu_k^2)\]</span>.</p>
+<p>Because the likelihood and the prior of <span class="math inline">\(\mu_k\)</span> are Gaussian, they yield a Gaussian posterior which we obtain by completing the square:</p>
+<p><span class="math display">\[\textrm{exp}(-\frac{1}{2}(y_i-\mu_k)^2 - \frac{1}{2\sigma^2}\mu_k^2) \]</span> <span class="math display">\[=\textrm{exp}(-\frac{1}{2}((1+\frac{1}{\sigma^2})\mu_k^2-2y_i\mu_k+y_i^2)))\]</span> <span class="math display">\[=\textrm{exp}(-\frac{1}{2}(1+\frac{1}{\sigma^2})(\mu_k^2-\frac{2y_i\mu_k}{1+\frac{1}{\sigma^2}}+(\frac{y_i}{1+\frac{1}{\sigma^2}})^2-(\frac{y_i}{1+\frac{1}{\sigma^2}})^2+y_i^2)))\]</span> <span class="math display">\[\propto \textrm{exp}(-\frac{1}{2}(1+\frac{1}{\sigma^2})(\mu_k - \frac{y_i}{1+\frac{1}{\sigma^2}})^2)\]</span></p>
+<p>which implies <span class="math inline">\(\mu_k | y_i, C_{ik} \sim \textrm{N}(\frac{y_i}{1+\frac{1}{\sigma^2}}, \frac{\sigma^2}{\sigma^2+1})\)</span>.</p>
+<p>The update for <span class="math inline">\(mu_k\)</span> is then sampled from this distribution.</p>
+</section>
+<section id="problem-2-variational-inference" class="level2">
+<h2 class="anchored" data-anchor-id="problem-2-variational-inference">Problem 2: Variational Inference</h2>
+<p>We now derive the updates for variational parameters <span class="math inline">\(m_k, s^2_k, phi_k\)</span>. The ELBO is</p>
+<p><span class="math display">\[ELBO(q) = \textrm{E[log} \space p(z)] + \textrm{E[log} \space p(x|z)] - \textrm{E[log} \space q(z)]\]</span>.</p>
+<p>By the Mean Field Assumption, we have</p>
+<p><span class="math display">\[q(z) = \prod_{k=1}^K q_k(\mu_k; m_k, s^2_k)\prod_{i=1}^n q(c_i ; \phi_i)\]</span></p>
+<p>First we derive the update for <span class="math inline">\(\bf{\phi}_i\)</span>.</p>
+<p><span class="math display">\[q_i(c_i ; \phi_i)^* \propto \textrm{exp}\{\textrm{E}_{-\phi_i}[\textrm{log}\space p(\mu, c_i, c_{-i}, y)]\} \\
+\]</span> <span class="math display">\[ = \textrm{exp}\{-\frac{1}{2}\sum_{i=1}^n\sum_{k=1}^KC_{ik}\textrm{E}_{-\phi_i}[(x_k-\mu_k)^2]\}\]</span> <span class="math display">\[\propto \textrm{exp}\{x_im_k-\frac{m_k^2+s_k^2}{2}\}\]</span> so the update for <span class="math inline">\(\phi_{ik}\)</span> is <span class="math display">\[\phi_{ik}=\textrm{exp}\{x_im_k-\frac{m_k^2+s_k^2}{2}\}\]</span> For <span class="math inline">\(mu_k\)</span>, <span class="math display">\[q_k(\mu_k ; m_k, s^2_k)^* \propto \textrm{exp}\{\textrm{E}_{-\mu_k}[\textrm{log}\space p(\mu_k, \mu_{-k}, c, y)]\} \\
+\]</span></p>
+<p><span class="math display">\[\propto \textrm{exp}\{(\sum_{i=1}^n{x_i\phi_{ik}})\mu_k- (\frac{1}{2}\sum_{i=1}^n\phi_{ik}+\frac{1}{2\sigma^2})\mu_k^2\}\]</span> which is proportional to a Gaussian with sufficient statistics <span class="math inline">\(\sum\mu_k\)</span> and <span class="math inline">\(\sum\mu_k^2\)</span> and natural parameters <span class="math inline">\(\sum_{i=1}^n{x_i}\phi_{ik}\)</span>,<span class="math inline">\((\frac{1}{2}\sum_{i=1}^n\phi_{ik}+\frac{1}{2\sigma^2})\)</span>. Solving for the mean <span class="math inline">\(m_k\)</span> and variance <span class="math inline">\(s_k^2\)</span> of this Gaussian gives updates <span class="math display">\[s^2_k = \frac{1}{\sum_{i=1}^n\phi_{ik} + \frac{1}{\sigma^2}}\]</span> and <span class="math display">\[m_k = \frac{\sum_{i=1}^n{x_i}\phi_{ik}}{\sum_{i=1}^n\phi_{ik} + \frac{1}{\sigma^2}}\]</span>.</p>
+</section>
+<section id="problem-3-fit-to-faithful-data-set" class="level2">
+<h2 class="anchored" data-anchor-id="problem-3-fit-to-faithful-data-set">Problem 3: Fit to Faithful data set</h2>
+<p>To fit the Old Faithful waiting time data set as a Gaussian 2-mixture, we use the derived CAVI algorithm and Gibbs Sampler with 3 chains of 10000 samples with 2000 burn-in samples. The estimates for <span class="math inline">\(\mu_1\)</span>, <span class="math inline">\(\mu_2\)</span>, and computation time are given below.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Method</th>
+<th><span class="math inline">\(\mu_1\)</span></th>
+<th><span class="math inline">\(\mu_2\)</span></th>
+<th style="text-align: right;">Mean computation time (s)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>CAVI</td>
+<td>54.74</td>
+<td>80.28</td>
+<td style="text-align: right;">0.17</td>
+</tr>
+<tr class="even">
+<td>Gibbs Sampler</td>
+<td>54.87</td>
+<td>80.35</td>
+<td style="text-align: right;">4.23</td>
+</tr>
+</tbody>
+</table>
+<p>The confusion matrix between the two algorithms estimated labels was</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Gibbs (<span class="math inline">\(c_i=1\)</span>)</th>
+<th>Gibbs (<span class="math inline">\(c_i=2\)</span>)</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>CAVI</strong> (<span class="math inline">\(c_i=1\)</span>)</td>
+<td>100</td>
+<td>0</td>
+<td>100</td>
+</tr>
+<tr class="even">
+<td><strong>CAVI</strong> (<span class="math inline">\(c_i=2\)</span>)</td>
+<td>1</td>
+<td>171</td>
+<td>172</td>
+</tr>
+<tr class="odd">
+<td>Total</td>
+<td>101</td>
+<td>171</td>
+<td>272</td>
+</tr>
+</tbody>
+</table>
+<p>We can see nearly perfect agreement between the methods.</p>
+<p>Based on trace plots, lag plots and effective sample size, the Gibbs sampler mixed well and converged quickly.</p>
+<p>All effective sample sizes for each <span class="math inline">\(\mu_k\)</span> and each chain were 10000 except for the 2nd chain for <span class="math inline">\(\mu_2\)</span>.</p>
+<div class="cell quarto-layout-panel" data-layout-nrow="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 100.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="output/mu_1_trace_plot.png" class="img-fluid figure-img"></p>
+<figcaption>10-sample average shown. Autocorrelation was low and sampler generally mixed and converged quickly.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 100.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="output/mu_2_trace_plot.png" class="img-fluid figure-img"></p>
+<figcaption>10-sample average shown. Autocorrelation was low and sampler generally mixed and converged quickly.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<p>Lag plots for <span class="math inline">\(\mu_2\)</span> chain 2 showed relatively high autocorrelation compared to other chains.</p>
+<div class="cell quarto-layout-panel" data-layout-nrow="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<p><img src="output/mu_1_lag_plot.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<p><img src="output/mu_2_lag_plot.png" class="img-fluid"></p>
+</div>
+</div>
+</div>
+</section>
+<section id="problem-4-simulation-study" class="level2">
+<h2 class="anchored" data-anchor-id="problem-4-simulation-study">Problem 4: Simulation Study</h2>
+<div class="cell quarto-layout-panel" data-layout-nrow="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<p><img src="output/bias_plot.png" class="img-fluid"></p>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 100.0%;justify-content: center;">
+<p><img src="output/cov_plot.png" class="img-fluid"></p>
+</div>
+</div>
+</div>
+<p>In general, the gibbs sampler estimates were more biased then the variational inference estimates. Bias was highest for <span class="math inline">\(k=3\)</span> i.e.&nbsp;<span class="math inline">\(\mu_3=10\)</span>. Biased increased from <span class="math inline">\(\mu_1\)</span> to <span class="math inline">\(\mu_3\)</span> but then sharpl decreased for <span class="math inline">\(mu_4=20\)</span>. This is likely because observations generated from this gaussian were better separated from the rest of the sample and quicker to label and thus converge on the true mean.</p>
+<p>Coverage of the true mean in the Gibbs sampler was somewhat unpredictable. Simulations with n = 1000 appeared to be closes to nominal coverage as well as the better separated <span class="math inline">\(\mu_4\)</span>. It may be that for very high sample sizes, the Gibbs sampler posterior means converged very tightly to the sample mean of their data and credible intervals were too narrow to include the true mean.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
